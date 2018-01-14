@@ -1,6 +1,7 @@
 """ The entry points of the identification for telecom mobile voice.
 
     Author: Sean Wu, Bill Haung
+    NCU CSIE 3B, Taiwan
 """
 
 import os
@@ -10,7 +11,7 @@ import sys
 import subprocess
 import scipy.io.wavfile as wav
 from python_speech_features import mfcc
-from cmp_mfcc import cmp_mfcc
+from cmp_mfcc_multicore import cmp_mfcc
 
 def main():
     """ The main function for entry point. """
@@ -26,14 +27,18 @@ def main():
         #    bit depth      16
         #    channels       mono (merged)
         try:
-            subprocess.call(['ffmpeg', '-y', '-i', sys.argv[1], '-ac', '1', '-ar', '8000',
-                            '-sample_fmt', 's16', '-f', 'wav', 'converted.tmp'])
+            print("[Note] Converting audio format (by ffmpeg)")
+            subprocess.call(['ffmpeg', '-y', '-hide_banner', '-i', sys.argv[1], '-ac', '1',
+                             '-ar', '8000', '-sample_fmt', 's16', '-f', 'wav', 'converted.tmp'])
         except FileNotFoundError:
             print("[Error] Require ffmpeg to convert the audio in sepcific format.")
 
         (rate, sig) = wav.read("converted.tmp")    # read the target wavfile
         target_mfcc = mfcc(sig, rate, appendEnergy=False)
-        print(cmp_mfcc(id_patterns, target_mfcc))
+        print("[Note] Start identification")
+        result = cmp_mfcc(id_patterns, target_mfcc)
+        print(result)
+        return result
 
 def read_id_patterns(folderpath):
     """ Read every id pattern in folderpath. If there exists a pickle, use it. """

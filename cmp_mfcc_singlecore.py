@@ -1,4 +1,8 @@
-""" Compare the MFCC difference between id patterns and target file. """
+""" Compare the MFCC difference between id patterns and target file.
+
+    Author: Sean Wu, Bill Haung
+    NCU CSIE 3B, Taiwan
+"""
 
 import math
 import numpy as np
