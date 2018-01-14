@@ -16,7 +16,7 @@ def main():
     """ The main function for entry point. """
 
     if len(sys.argv) < 2:    # check the command format
-        print("Error: No target file defined. Usage: {} <target_file>".format(sys.argv[0]))
+        print("[Error] No target file defined. Usage: {} <target_file>".format(sys.argv[0]))
         sys.exit(1)
     else:
         id_patterns = read_id_patterns(join("id_wav"))     # load id patterns
@@ -25,10 +25,13 @@ def main():
         #    sample rate    8000 Hz
         #    bit depth      16
         #    channels       mono (merged)
-        subprocess.call(['ffmpeg.exe', '-y', '-i', sys.argv[1], '-ac', '1', '-ar', '8000',
-                         '-sample_fmt', 's16', '-f', 'wav', 'converted'])
+        try:
+            subprocess.call(['ffmpeg', '-y', '-i', sys.argv[1], '-ac', '1', '-ar', '8000',
+                            '-sample_fmt', 's16', '-f', 'wav', 'converted.tmp'])
+        except FileNotFoundError:
+            print("[Error] Require ffmpeg to convert the audio in sepcific format.")
 
-        (rate, sig) = wav.read("converted")    # read the target wavfile
+        (rate, sig) = wav.read("converted.tmp")    # read the target wavfile
         target_mfcc = mfcc(sig, rate, appendEnergy=False)
         print(cmp_mfcc(id_patterns, target_mfcc))
 
