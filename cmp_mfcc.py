@@ -4,7 +4,6 @@ import math
 import numpy as np
 
 def cmp_mfcc(id_ptns, target_ptn):
-    # TODO: use the threshold to stop searching instead of comparing whole array.
     """ Compare the MFCC difference. Return the smallest difference number for each id patterns.
 
         Parameters
