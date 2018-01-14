@@ -1,0 +1,1 @@
+.\ffmpeg.exe -i '.\in_busy (1).mp3' -ac 1 -ar 8000 -sample_fmt s16 in_busy.wav
