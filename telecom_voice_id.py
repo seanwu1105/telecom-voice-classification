@@ -11,7 +11,7 @@ import sys
 import subprocess
 import scipy.io.wavfile as wav
 from python_speech_features import mfcc
-from cmp_mfcc_multicore import cmp_mfcc
+from cmp_mfcc import cmp_mfcc
 
 def main():
     """ The main function for entry point. """

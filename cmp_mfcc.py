@@ -9,7 +9,7 @@ import math
 from multiprocessing import Process, Queue
 import numpy as np
 
-def cmp_mfcc(id_ptns, target_ptn):
+def cmp_mfcc(id_ptns, target_ptn, multiproc=True):
     """ Compare the MFCC difference. Return the smallest difference number for each id patterns.
 
         Parameters
@@ -21,14 +21,25 @@ def cmp_mfcc(id_ptns, target_ptn):
         """
 
     id_diff = dict()    # the difference index dictionary for each id pattern
-    queue = Queue()    # the queue for outputs of multiprocessing
-    procs = [Process(target=cmp_proc, args=(item, target_ptn, queue)) for item in id_ptns.items()]
-    for proc in procs:
-        proc.start()
-    for proc in procs:
-        proc.join()
-    while not queue.empty():
-        id_diff.update(queue.get())
+    if not multiproc:
+        for name, ptn in id_ptns.items():
+            window = len(ptn)
+            diff = math.inf
+            # if the length of target pattern is smaller than the id pattern, the difference index
+            #   will be infinite.
+            if len(target_ptn) >= window:
+                for idx in range(len(target_ptn) - window + 1):
+                    diff = min(sum(np.power(target_ptn[idx:idx + window] - ptn, 2).flat), diff)
+            id_diff[name] = diff / window    # normalized the difference index
+    else:
+        queue = Queue()    # the queue for outputs of multiprocessing
+        procs = [Process(target=cmp_proc, args=(i, target_ptn, queue)) for i in id_ptns.items()]
+        for proc in procs:
+            proc.start()
+        for proc in procs:
+            proc.join()
+        while not queue.empty():
+            id_diff.update(queue.get())
     return id_diff
 
 def cmp_proc(id_item, target_ptn, queue):
