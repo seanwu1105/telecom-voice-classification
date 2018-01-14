@@ -1,4 +1,4 @@
-# Categort
+# Categories
 
 ## In Busy
 
