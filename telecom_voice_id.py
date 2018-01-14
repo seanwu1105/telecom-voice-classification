@@ -3,6 +3,9 @@
     Author: Sean Wu, Bill Haung
 """
 
+import os
+from os.path import join, isfile
+import pickle
 import sys
 import scipy.io.wavfile as wav
 from python_speech_features import mfcc
@@ -15,20 +18,25 @@ def main():
         print("Error: No target file defined. Usage: {} <target_file>".format(sys.argv[0]))
         sys.exit(1)
     else:
-        id_patterns = read_id_pattern()
+        id_patterns = read_id_pattern(join("id_wav"))
         (rate, sig) = wav.read(sys.argv[1])    # read the target wavfile
         target_mfcc = mfcc(sig, rate, appendEnergy=False)
         print(cmp_mfcc(id_patterns, target_mfcc))
 
-def read_id_pattern():
-    #TODO: do not read the id pattern waveforms; instead, read the numpy array data.
-    filenames = ["in_busy_main.wav", "no_response_A_main.wav", "no_response_B_main.wav",
-                 "voice_mail_A_1_main.wav", "voice_mail_A_2_main.wav", "voice_mail_B_main.wav",
-                 "voice_mail_C_main.wav", "voice_mail_D_1_main.wav", "voice_mail_D_2_main.wav"]
-    id_patterns = dict()
-    for filename in filenames:
-        (rate, sig) = wav.read(filename)
-        id_patterns[filename] = mfcc(sig, rate, appendEnergy=False)
+def read_id_pattern(folderpath):
+    """ Read every id pattern in folderpath. If there exists a pickle, use it. """
+    try:
+        with open('id_ptn.pickle', 'rb') as pfile:
+            id_patterns = pickle.load(pfile)
+    except FileNotFoundError:
+        filenames = os.listdir(folderpath)    # list every file in the folderpath
+        paths = (join(folderpath, f) for f in filenames if isfile(join(folderpath, f)))
+        id_patterns = dict()
+        for idx, path in enumerate(paths):
+            (rate, sig) = wav.read(path)
+            id_patterns[filenames[idx]] = mfcc(sig, rate, appendEnergy=False)    # save MFCC feature
+        with open("id_ptn.pickle", 'wb') as pfile:
+            pickle.dump(id_patterns, pfile, protocol=pickle.HIGHEST_PROTOCOL)
     return id_patterns
 
 if __name__ == '__main__':

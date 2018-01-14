@@ -19,6 +19,8 @@ def cmp_mfcc(id_ptns, target_ptn):
     for name, ptn in id_ptns.items():
         window = len(ptn)
         diff = math.inf
+        # if the length of target pattern is smaller than the id pattern, the difference index will
+        #   be infinite.
         if len(target_ptn) >= window:
             for idx in range(len(target_ptn) - window + 1):
                 diff = min(sum(np.power(target_ptn[idx:idx + window] - ptn, 2).flat), diff)
