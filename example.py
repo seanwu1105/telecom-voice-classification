@@ -8,8 +8,8 @@ import numpy
 
 numpy.set_printoptions(threshold=numpy.nan)
 (rate,sig) = wav.read("no_response_A (1).wav")
-mfcc_feat = mfcc(sig,rate)
+mfcc_feat = mfcc(sig,rate, appendEnergy=False)
 #d_mfcc_feat = delta(mfcc_feat, 2)
 #fbank_feat = logfbank(sig,rate)
-print(mfcc_feat)
+print(mfcc_feat[0:3])
 print(len(mfcc_feat))
