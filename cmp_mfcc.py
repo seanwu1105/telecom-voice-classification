@@ -18,6 +18,8 @@ def cmp_mfcc(id_ptns, target_ptn, multiproc=True):
             The id (base) patterns dictionary. Each data is 1-dimension array.
         target_ptn : 1d-array
             The target pattern to be compared.
+        multiproc : boolean
+            Enable the multiprocessing for each id patterns comparison.
         """
 
     id_diff = dict()    # the difference index dictionary for each id pattern
