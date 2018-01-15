@@ -38,10 +38,8 @@ def cmp_mfcc(id_ptns, target_ptn, multiproc=True):
         procs = [Process(target=cmp_proc, args=(i, target_ptn, queue)) for i in id_ptns.items()]
         for proc in procs:
             proc.start()
-        for proc in procs:
-            proc.join()
-        while not queue.empty():
-            id_diff.update(queue.get())
+        while not queue.empty():            # till the queue is empty, the multiprocesses will have
+            id_diff.update(queue.get())     #   surely stopped. So we don't need join() for procs.
     return id_diff
 
 def cmp_proc(id_item, target_ptn, queue):
