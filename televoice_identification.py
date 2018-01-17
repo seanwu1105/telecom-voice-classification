@@ -14,11 +14,13 @@ def televoice_identify(filepath, threshold=None, scan_step=1, multiproc=False):
 
     Parameters
     ----------
-    filepath : (string)
+    filepath : string
         The path of target file (to be compared).
-    threshold : (float)
+    threshold : float
         The threshold for the least difference to break the comparison.
-    multiproc : (boolean)
+    scan_step : integer
+        The step of scanning on frame of target MFCC pattern.
+    multiproc : boolean
         If `True`, the comparing process will run in multicore of CPU, and vice versa.
 
     Return
@@ -60,7 +62,7 @@ def read_golden_ptns(folderpath):
 
     Parameters
     ----------
-    folderpath : (string)
+    folderpath : string
         The folderpath for the golden-pattern wavfiles.
 
     Return

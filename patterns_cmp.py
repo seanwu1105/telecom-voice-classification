@@ -20,6 +20,10 @@ def ptns_cmp(golden_ptns, target_ptn, threshold=None, scan_step=1, multiproc=Fal
             The golden patterns dictionary. Each data is 1-dimension array.
         target_ptn : 1d-array
             The target pattern to be compared.
+        threshold : float
+            The threshold for the least difference to break the comparison.
+        scan_step : integer
+            The step of scanning on frame of target MFCC pattern.
         multiproc : boolean
             Enable the multiprocessing for each id patterns comparison.
 
@@ -58,7 +62,23 @@ def ptns_cmp(golden_ptns, target_ptn, threshold=None, scan_step=1, multiproc=Fal
     return diff_dict
 
 def cmp_proc(golden_item, target_ptn, queue, stop_flag, threshold, scan_step):
-    """ The comparing procedure for multiprocessing. """
+    """ The comparing procedure for multiprocessing.
+
+    Parameters
+        ----------
+        golden_item : dict
+            The golden patterns dictionary. Each data is 1-dimension array.
+        target_ptn : 1d-array
+            The target pattern to be compared.
+        queue : multiprocessing.Queue()
+            The `Queue` instance for getting the result (diff) by multiprocess `Process()`.
+        stop_flag: multiprocessing.Value()
+            If set nonzero, this function will stop.
+        threshold : float
+            The threshold for the least difference to break the comparison.
+        scan_step : integer
+            The step of scanning on frame of target MFCC pattern.
+    """
 
     window = len(golden_item[1])    # the pattern of the golden element in dictionary
     diff = math.inf

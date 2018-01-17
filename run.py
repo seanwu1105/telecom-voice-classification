@@ -16,17 +16,20 @@ Result = collections.namedtuple('Result', ['target_fn',
 
 def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
         multiproc_cmp=False, nmultiproc_run=8):
-    """ The entry function which reads all testing audio in `folderpath` parameter.
+    """ Get the comparison result for each testing audio files. Result will be saved in
+        `results.csv`.
 
     Parameters
     ----------
-    folderpath : (string)
+    folderpath : string
         The folderpath of testing audio files. The default is `./test_audio`.
-    threshold : (float)
+    threshold : float
         The threshold for the least difference to break the comparison.
-    multiproc_cmp : (boolean)
+    scan_step : integer
+        The step of scanning on frame of target MFCC pattern.
+    multiproc_cmp : boolean
         If `True`, the comparing process will run in multicore of CPU, and vice versa.
-    nmultiproc_run : (integer)
+    nmultiproc_run : integer
         The # of process in running test. If set `None` or non-positive integer, `run()` will excute
         sequentially. The default is `8`.
     """
@@ -79,10 +82,22 @@ def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=
 
     Parameters
     ----------
-    filename : (string)
+    filename : string
         The filename to compare whether is successful or not.
-    filepath : (string)
+    filepath : string
         The filepath to the target audio file.
+    threshold : float
+        The threshold for the least difference to break the comparison.
+    scan_step : integer
+        The step of scanning on frame of target MFCC pattern.
+    multiproc : boolean
+        If `True`, the comparing process will run in multicore of CPU, and vice versa.
+    queue : multiprocessing.Queue()
+        The `Queue` instance for getting the result by multiprocess `Process()`.
+    
+    Return
+    ------
+    result : (namedtuple) A nemedtuple `Result` containing the information of each result.
     """
     start_time = time.time()
     diff_dict = televoice_identify(filepath, threshold=threshold,
