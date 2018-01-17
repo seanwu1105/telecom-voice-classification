@@ -105,3 +105,4 @@ venv.bak/
 
 # project-special
 *.tmp
+*.pickle

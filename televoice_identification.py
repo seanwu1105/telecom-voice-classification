@@ -1,8 +1,4 @@
-""" The entry points of the identification for telecom mobile voice.
-
-    Author: Sean Wu, Bill Haung
-    NCU CSIE 3B, Taiwan
-"""
+""" The indentification for single target audio file. """
 
 import os
 from os.path import join, isfile
@@ -13,7 +9,7 @@ import scipy.io.wavfile as wav
 from python_speech_features import mfcc
 from patterns_cmp import ptns_cmp
 
-def televoice_identify(filepath, threshold=None, multiproc=True):
+def televoice_identify(filepath, threshold=None, scan_step=1, multiproc=False):
     """ Calculate the difference indices between target audio and each golden audio wavfiles.
 
     Parameters
@@ -34,7 +30,7 @@ def televoice_identify(filepath, threshold=None, multiproc=True):
     golden_ptns = read_golden_ptns(join("golden_wav")) # load golden wavfiles
 
     # the filepath for converted wavfile by ffmpeg
-    tmp_filepath = './temp/' + filepath.rsplit("\\", 1)[-1].rsplit(".", 1)[0] + '.tmp'
+    tmp_filepath = join("temp", filepath.rsplit("\\", 1)[-1] + ".tmp")
 
     # Call the ffmpeg to convert (normalize) the input audio into:
     #    sample rate    8000 Hz
@@ -48,7 +44,11 @@ def televoice_identify(filepath, threshold=None, multiproc=True):
         sys.exit(2)    # ffmpeg require
     (rate, sig) = wav.read(tmp_filepath) # read the target wavfile
     target_mfcc = mfcc(sig, rate, appendEnergy=False)
-    result = ptns_cmp(golden_ptns, target_mfcc, threshold=threshold, multiproc=multiproc)
+    result = ptns_cmp(golden_ptns,
+             target_mfcc,
+             threshold=threshold,
+             scan_step=scan_step,
+             multiproc=multiproc)
     try:
         os.remove(tmp_filepath) # remove the tmp file
     except OSError:
@@ -68,7 +68,7 @@ def read_golden_ptns(folderpath):
     The dictionary of golden patterns.
     """
     try:
-        with open('golden_ptns.pickle', 'rb') as pfile:
+        with open(join("temp", "golden_ptns.pickle"), 'rb') as pfile:
             return pickle.load(pfile)
     except FileNotFoundError:
         filenames = os.listdir(folderpath)    # list every file in the folderpath
@@ -77,6 +77,6 @@ def read_golden_ptns(folderpath):
         for idx, path in enumerate(paths):
             (rate, sig) = wav.read(path)
             golden_ptns[filenames[idx]] = mfcc(sig, rate, appendEnergy=False)    # save MFCC feature
-        with open("golden_ptns.pickle", 'wb') as pfile:    # save the pickle binary
+        with open(join("temp", "golden_ptns.pickle"), 'wb') as pfile:    # save the pickle binary
             pickle.dump(golden_ptns, pfile, protocol=pickle.HIGHEST_PROTOCOL)
     return golden_ptns
