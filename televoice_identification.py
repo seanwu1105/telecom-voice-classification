@@ -18,6 +18,12 @@ def televoice_identify(filepath, threshold=None, multiproc=True):
 
     Parameters
     ----------
+    filepath : (string)
+        The path of target file (to be compared).
+    threshold : (float)
+        The threshold for the least difference to break the comparison.
+    multiproc : (boolean)
+        If `True`, the comparing process will run in multicore of CPU, and vice versa.
 
     Return
     ------
@@ -25,22 +31,28 @@ def televoice_identify(filepath, threshold=None, multiproc=True):
       wavfiles.
     """
 
-    golden_ptns = read_golden_ptns(join("golden_wav"))     # load golden wavfiles
+    golden_ptns = read_golden_ptns(join("golden_wav")) # load golden wavfiles
+
+    # the filepath for converted wavfile by ffmpeg
+    tmp_filepath = './temp/' + filepath.rsplit("\\", 1)[-1].rsplit(".", 1)[0] + '.tmp'
 
     # Call the ffmpeg to convert (normalize) the input audio into:
     #    sample rate    8000 Hz
     #    bit depth      16
     #    channels       mono (merged)
     try:
-        subprocess.call(['ffmpeg', '-y', '-hide_banner', '-loglevel', 'panic', '-i', filepath,
-                         '-ac', '1', '-ar', '8000', '-sample_fmt', 's16', '-f', 'wav',
-                         'converted.tmp'])
+        subprocess.run(['ffmpeg', '-y', '-hide_banner', '-loglevel', 'panic', '-i', filepath,
+                        '-ac', '1', '-ar', '8000', '-sample_fmt', 's16', '-f', 'wav', tmp_filepath])
     except FileNotFoundError:
         print("[Error] Require ffmpeg to convert the audio in sepcific format.")
         sys.exit(2)    # ffmpeg require
-    (rate, sig) = wav.read("converted.tmp")    # read the target wavfile
+    (rate, sig) = wav.read(tmp_filepath) # read the target wavfile
     target_mfcc = mfcc(sig, rate, appendEnergy=False)
     result = ptns_cmp(golden_ptns, target_mfcc, threshold=threshold, multiproc=multiproc)
+    try:
+        os.remove(tmp_filepath) # remove the tmp file
+    except OSError:
+        pass
     return result
 
 def read_golden_ptns(folderpath):
