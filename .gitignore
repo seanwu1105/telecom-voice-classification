@@ -106,5 +106,6 @@ venv.bak/
 # project-special
 *.tmp
 *.pickle
+*.csv
 test_audio/*
 temp/*
