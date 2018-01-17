@@ -32,7 +32,7 @@ def televoice_identify(filepath, threshold=None, scan_step=1, multiproc=False):
     golden_ptns = read_golden_ptns(join("golden_wav")) # load golden wavfiles
 
     # the filepath for converted wavfile by ffmpeg
-    tmp_filepath = join("temp", filepath.rsplit("\\", 1)[-1] + ".tmp")
+    tmp_filepath = join("temp", os.path.split(filepath)[-1] + ".tmp")
 
     # Call the ffmpeg to convert (normalize) the input audio into:
     #    sample rate    8000 Hz

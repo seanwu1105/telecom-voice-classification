@@ -69,13 +69,13 @@ def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
                                          threshold=threshold,
                                          scan_step=scan_step,
                                          multiproc=multiproc_cmp))
-    
+    total_time = time.time() - total_start_time
+    print("------ Total Time Elapse: {} ------".format(total_time))
     # output the result in csv file
     with open("results.csv", 'w', newline='') as csvfile:
         w = csv.writer(csvfile)
-        w.writerow(('Target', 'Matched', 'Difference', 'Successful', 'Exe Time'))  # field header
+        w.writerow(('Target', 'Matched', 'Difference', 'Successful', 'Exe Time', total_time))  # field header
         w.writerows((r.target_fn, r.matched_golden_fn, r.diff_idx, r.successful, r.exe_time) for r in results)
-    print("------ Total Time Elapse: {} ------".format(time.time() - total_start_time))
 
 def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=False, queue=None):
     """ Calculate the result and print on the screen.
@@ -115,4 +115,4 @@ def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=
     return result
 
 if __name__ == '__main__':
-    run()
+    run(threshold=1000)
