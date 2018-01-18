@@ -12,6 +12,7 @@ Result = collections.namedtuple('Result', ['target_fn',
                                            'matched_golden_fn',
                                            'diff_idx',
                                            'successful',
+                                           'max_result_diff',
                                            'exe_time'])
 
 def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
@@ -72,10 +73,15 @@ def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
     total_time = time.time() - total_start_time
     print("------ Total Time Elapse: {} ------".format(total_time))
     # output the result in csv file
+    parameter_msg = ("threshold={}, scan_step={}, "
+                    "multiproc_cmp={}, nmultiproc_run={}").format(threshold, scan_step,
+                                                                  multiproc_cmp, nmultiproc_run)
     with open("results.csv", 'w', newline='') as csvfile:
         w = csv.writer(csvfile)
-        w.writerow(('Target', 'Matched', 'Difference', 'Successful', 'Exe Time', total_time))  # field header
-        w.writerows((r.target_fn, r.matched_golden_fn, r.diff_idx, r.successful, r.exe_time) for r in results)
+        w.writerow(('Target', 'Matched', 'Difference', 'Successful', 'Max Result Difference',
+                    'Exe Time', total_time, parameter_msg))  # field header
+        w.writerows((r.target_fn, r.matched_golden_fn, r.diff_idx, r.successful, r.max_result_diff,
+                     r.exe_time) for r in results)
 
 def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=False, queue=None):
     """ Calculate the result and print on the screen.
@@ -106,13 +112,17 @@ def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=
                     min(diff_dict, key=diff_dict.get),
                     min(diff_dict.values()),
                     filename[:2] == min(diff_dict, key=diff_dict.get)[:2],
+                    max(diff_dict.values()) - min(diff_dict.values()),
                     time.time() - start_time)
-    print("{:30} {:30}({:8.2f})   {}\t{:9.5f}(s)".format(result.target_fn, result.matched_golden_fn,
-                                                         result.diff_idx, result.successful,
-                                                         result.exe_time))
+    print("{:30} {:27}({:8.2f})\t{}\tMRD={:8.2f}  {:9.5f}(s)".format(result.target_fn,
+                                                                     result.matched_golden_fn,
+                                                                     result.diff_idx,
+                                                                     result.successful,
+                                                                     result.max_result_diff,
+                                                                     result.exe_time))
     if queue is not None:
         queue.put(result)
     return result
 
 if __name__ == '__main__':
-    run(threshold=1800, scan_step=4)
+    run(multiproc_cmp=True)
