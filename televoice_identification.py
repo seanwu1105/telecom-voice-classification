@@ -46,11 +46,8 @@ def televoice_identify(filepath, threshold=None, scan_step=1, multiproc=False):
         sys.exit(2)    # ffmpeg require
     (rate, sig) = wav.read(tmp_filepath) # read the target wavfile
     target_mfcc = mfcc(sig, rate, appendEnergy=False)
-    result = ptns_cmp(golden_ptns,
-             target_mfcc,
-             threshold=threshold,
-             scan_step=scan_step,
-             multiproc=multiproc)
+    result = ptns_cmp(golden_ptns, target_mfcc, threshold=threshold, scan_step=scan_step,
+                      multiproc=multiproc)
     try:
         os.remove(tmp_filepath) # remove the tmp file
     except OSError:

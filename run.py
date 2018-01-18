@@ -34,9 +34,9 @@ def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
         sequentially. The default is `8`.
     """
     try:
-        os.remove("golden_ptns.pickle")    # remove the old golden patterns' pickle
+        os.remove(join("temp", "golden_ptns.pickle"))    # remove the old golden patterns' pickle
     except OSError:
-        pass
+        print("golden_ptns.pickle not exists, and it's ok.")
     filenames = os.listdir(folderpath)    # list every file in the folderpath
     paths = (join(folderpath, f) for f in filenames if isfile(join(folderpath, f)))
     results = set()
@@ -107,7 +107,7 @@ def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=
                     min(diff_dict.values()),
                     filename[:2] == min(diff_dict, key=diff_dict.get)[:2],
                     time.time() - start_time)
-    print("{:30} {:30}({:8.2f})   {}  {:9.5f}(s)".format(result.target_fn, result.matched_golden_fn,
+    print("{:30} {:30}({:8.2f})   {}\t{:9.5f}(s)".format(result.target_fn, result.matched_golden_fn,
                                                          result.diff_idx, result.successful,
                                                          result.exe_time))
     if queue is not None:
@@ -115,4 +115,4 @@ def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=
     return result
 
 if __name__ == '__main__':
-    run(multiproc_cmp=True, threshold=1700, scan_step=4)
+    run(multiproc_cmp=True, threshold=1800, scan_step=4)
