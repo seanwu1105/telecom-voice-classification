@@ -115,4 +115,4 @@ def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=
     return result
 
 if __name__ == '__main__':
-    run(multiproc_cmp=True, threshold=1800, scan_step=4)
+    run(threshold=1800, scan_step=4)
