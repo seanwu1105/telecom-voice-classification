@@ -4,7 +4,7 @@ import collections
 import csv
 from multiprocessing import Process, Queue
 import os
-from os.path import join, isfile
+from os.path import join, isfile, exists, basename
 import time
 from televoice_identification import televoice_identify
 
@@ -34,12 +34,17 @@ def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
         The # of process in running test. If set `None` or non-positive integer, `run()` will excute
         sequentially. The default is `8`.
     """
+    if not exists(join("temp")):
+        os.makedirs(join("temp"))
+    if not exists(join("test_audio")):
+        os.makedirs(join("test_audio"))
     try:
         os.remove(join("temp", "golden_ptns.pickle"))    # remove the old golden patterns' pickle
     except OSError:
         print("golden_ptns.pickle not exists, and it's ok.")
-    filenames = os.listdir(folderpath)    # list every file in the folderpath
-    paths = (join(folderpath, f) for f in filenames if isfile(join(folderpath, f)))
+    paths = (join(folderpath, f) for f
+             in os.listdir(folderpath)
+             if isfile(join(folderpath, f)) and f.lower().endswith(('.mp3', '.wav')))
     results = set()
 
     total_start_time = time.time()
@@ -54,7 +59,7 @@ def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
                     results.add(queue.get())
                 procs = []
             procs.append(Process(target=calculate_result,
-                                 args=(filenames[idx], path),
+                                 args=(basename(path), path),
                                  kwargs={'threshold': threshold,
                                          'scan_step': scan_step,
                                          'multiproc': multiproc_cmp,
@@ -65,8 +70,8 @@ def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
             for _ in procs:
                 results.add(queue.get())
     else: # run sequentially
-        for idx, path in enumerate(paths):
-            results.add(calculate_result(filenames[idx], path,
+        for path in paths:
+            results.add(calculate_result(basename(path), path,
                                          threshold=threshold,
                                          scan_step=scan_step,
                                          multiproc=multiproc_cmp))
@@ -125,4 +130,4 @@ def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=
     return result
 
 if __name__ == '__main__':
-    run(multiproc_cmp=True)
+    run(threshold=1800, scan_step=4)
