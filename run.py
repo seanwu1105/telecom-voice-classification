@@ -142,4 +142,4 @@ def max_result_diff(diff_dict):
     return max(diff_dict.values()) - min(diff_dict.values())
 
 if __name__ == '__main__':
-    run(multiproc_cmp=True, scan_step=3, threshold=1500)
+    run(scan_step=3, threshold=1500)

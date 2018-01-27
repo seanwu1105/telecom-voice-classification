@@ -82,4 +82,9 @@ def read_golden_ptns(folderpath):
                 pickle.dump(golden_ptns, pfile, protocol=pickle.HIGHEST_PROTOCOL)
             return golden_ptns
         except EOFError: # the pickle file created but binary content haven't been written in
+            print("[Warning] Try to load golden_ptns.pickle but is empty, automatically retrying..")
             continue # retry opening pickle file
+        except pickle.UnpicklingError as err:
+            print("[Warning] Try to load golden_ptns.pickle but {}"
+                  "Automatically retrying..".format(err))
+            continue
