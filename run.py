@@ -6,6 +6,7 @@ from multiprocessing import Process, Queue
 import os
 from os.path import join, isfile, exists, basename
 import time
+import platform
 from televoice_identification import televoice_identify
 
 Result = collections.namedtuple('Result', ['target_fn',
@@ -78,10 +79,10 @@ def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
     total_time = time.time() - total_start_time
     print("------ Total Time Elapse: {} ------".format(total_time))
     # output the result in csv file
-    parameter_msg = ("threshold={}, scan_step={}, "
-                    "multiproc_cmp={}, nmultiproc_run={}").format(threshold, scan_step,
-                                                                  multiproc_cmp, nmultiproc_run)
-    with open("results.csv", 'w', newline='') as csvfile:
+    parameter_msg = ("platform={} {} threshold={} scan_step={} multiproc_cmp={} "
+                     "nmultiproc_run={}").format(platform.system(), platform.release(), threshold,
+                                                 scan_step, multiproc_cmp, nmultiproc_run)
+    with open("{}.csv".format(parameter_msg), 'w', newline='') as csvfile:
         w = csv.writer(csvfile)
         w.writerow(('Target', 'Matched', 'Difference', 'Successful', 'Max Result Difference',
                     'Exe Time', total_time, parameter_msg))  # field header
@@ -105,7 +106,7 @@ def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=
         If `True`, the comparing process will run in multicore of CPU, and vice versa.
     queue : multiprocessing.Queue()
         The `Queue` instance for getting the result by multiprocess `Process()`.
-    
+
     Return
     ------
     result : (namedtuple) A nemedtuple `Result` containing the information of each result.
@@ -116,18 +117,29 @@ def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=
     result = Result(filename,
                     min(diff_dict, key=diff_dict.get),
                     min(diff_dict.values()),
-                    filename[:2] == min(diff_dict, key=diff_dict.get)[:2],
-                    max(diff_dict.values()) - min(diff_dict.values()),
+                    check_result(filename, diff_dict),
+                    max_result_diff(diff_dict),
                     time.time() - start_time)
-    print("{:30} {:27}({:8.2f})\t{}\tMRD={:8.2f}  {:9.5f}(s)".format(result.target_fn,
-                                                                     result.matched_golden_fn,
-                                                                     result.diff_idx,
-                                                                     result.successful,
-                                                                     result.max_result_diff,
-                                                                     result.exe_time))
+    print("{:30} {:27}({:8.2f}) {:^7} MRD={:8.2f}  {:9.5f}(s)".format(result.target_fn,
+                                                                      result.matched_golden_fn,
+                                                                      result.diff_idx,
+                                                                      result.successful,
+                                                                      result.max_result_diff,
+                                                                      result.exe_time))
     if queue is not None:
         queue.put(result)
     return result
 
+def check_result(filename, diff_dict):
+    """ Return the result is correct, failed or typical televoice. """
+    if max_result_diff(diff_dict) < 2000 and min(diff_dict.values()) > 2000: # XXX: the typical detect conditions
+        return 'Typical'
+    else:
+        return str(filename[:2] == min(diff_dict, key=diff_dict.get)[:2])
+
+def max_result_diff(diff_dict):
+    """ Return the maximum difference index of result dictionary. """
+    return max(diff_dict.values()) - min(diff_dict.values())
+
 if __name__ == '__main__':
-    run(threshold=1800, scan_step=4)
+    run(multiproc_cmp=True, scan_step=4, threshold=1900)
