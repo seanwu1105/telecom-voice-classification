@@ -29,10 +29,10 @@ def ptns_cmp(golden_ptns, target_ptn, threshold=None, scan_step=1, multiproc=Fal
 
         Return
         ------
-        diff_dict : (dict) A dictionary of differences between each golden pattern.
+        diff_indice : (dict) A dictionary of differences between each golden pattern.
         """
 
-    diff_dict = dict()    # the difference index dictionary for each golden pattern
+    diff_indice = dict()    # the difference index dictionary for each golden pattern
     if not multiproc:    # sequential comparison
         for name, ptn in golden_ptns.items():
             window = len(ptn)
@@ -43,9 +43,9 @@ def ptns_cmp(golden_ptns, target_ptn, threshold=None, scan_step=1, multiproc=Fal
                 for idx in range(0, len(target_ptn) - window + 1, scan_step):
                     diff = min(sum(np.power(target_ptn[idx:idx + window] - ptn, 2).flat), diff)
                     if threshold and diff / window < threshold:
-                        diff_dict[name] = diff / window
-                        return diff_dict
-            diff_dict[name] = diff / window # save the difference index
+                        diff_indice[name] = diff / window
+                        return diff_indice
+            diff_indice[name] = diff / window # save the difference index
     else:    # multicore parallel comparison
         queue = Queue()    # the queue for outputs of multiprocessing
         stop_flag = Value('H', 0)    # the flag to stop the process from running if set 1
@@ -58,8 +58,8 @@ def ptns_cmp(golden_ptns, target_ptn, threshold=None, scan_step=1, multiproc=Fal
         for proc in procs:
             proc.start()
         for _ in procs:
-            diff_dict.update(queue.get())
-    return diff_dict
+            diff_indice.update(queue.get())
+    return diff_indice
 
 def cmp_proc(golden_item, target_ptn, queue, stop_flag, threshold, scan_step):
     """ The comparing procedure for multiprocessing.

@@ -108,4 +108,5 @@ venv.bak/
 *.pickle
 *.csv
 test_audio/*
+t/*
 temp/*
