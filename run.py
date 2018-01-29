@@ -1,4 +1,6 @@
-""" Run the televoice_indentify() through the testing data in `/test_audio`. """
+""" Author: Sean Wu
+    NCU CSIE 3B, Taiwan
+Run the televoice_indentify() through all of testing data in `/test_audio`. """
 
 import csv
 from multiprocessing import Process, Queue

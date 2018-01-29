@@ -1,4 +1,7 @@
-""" The indentification for single target audio file. Basically, this file add some pre-processing
+""" Author: Sean Wu
+    NCU CSIE 3B, Taiwan
+
+The indentification for single target audio file. Basically, this file add some pre-processing
 and post-processing for the pattern comparison. Following is the explanation.
 
 Pre-Processing
@@ -24,7 +27,7 @@ import sys
 import subprocess
 import scipy.io.wavfile as wav
 from python_speech_features import mfcc
-from patterns_cmp import ptns_cmp
+from ptns_cmp import ptns_cmp
 
 class Result():
     """ An object containing both raw and analyzed result calculated from patterns comparison. """
