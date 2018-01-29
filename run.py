@@ -49,7 +49,9 @@ def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
     results = set()
 
     total_start_time = time.time()
-    if nmultiproc_run is not None and nmultiproc_run > 1: # run parallelly
+    if nmultiproc_run is not None and nmultiproc_run > 1:
+        # run parallelly
+        # the variable "nmultiproc_run" is the number of multiprocessing running parallelly one time
         procs = []
         queue = Queue()
         for idx, path in enumerate(paths):
@@ -59,8 +61,7 @@ def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
                 for _ in procs:
                     results.add(queue.get())
                 procs = []
-            procs.append(Process(target=calculate_result,
-                                 args=(basename(path), path),
+            procs.append(Process(target=calculate_result, args=(path,),
                                  kwargs={'threshold': threshold,
                                          'scan_step': scan_step,
                                          'multiproc': multiproc_cmp,
@@ -70,12 +71,14 @@ def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
                 proc.start()
             for _ in procs:
                 results.add(queue.get())
-    else: # run sequentially
+    else:
+        # run sequentially
         for path in paths:
-            results.add(calculate_result(basename(path), path,
+            results.add(calculate_result(path,
                                          threshold=threshold,
                                          scan_step=scan_step,
                                          multiproc=multiproc_cmp))
+
     total_time = time.time() - total_start_time
     print("------ Total Time Elapse: {} ------".format(total_time))
     # output the result in csv file
@@ -89,13 +92,11 @@ def run(folderpath=join("test_audio"), threshold=None, scan_step=1,
         w.writerows((r.target_fn, r.matched_golden_fn, r.diff_idx, r.successful, r.max_result_diff,
                      r.exe_time) for r in results)
 
-def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=False, queue=None):
+def calculate_result(filepath, threshold=None, scan_step=1, multiproc=False, queue=None):
     """ Calculate the result and print on the screen.
 
     Parameters
     ----------
-    filename : string
-        The filename to compare whether is successful or not.
     filepath : string
         The filepath to the target audio file.
     threshold : float
@@ -111,13 +112,14 @@ def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=
     ------
     result : (namedtuple) A nemedtuple `Result` containing the information of each result.
     """
+
     start_time = time.time()
     diff_dict = televoice_identify(filepath, threshold=threshold,
                                    scan_step=scan_step, multiproc=multiproc)
-    result = Result(filename,
+    result = Result(basename(filepath),
                     min(diff_dict, key=diff_dict.get),
                     min(diff_dict.values()),
-                    check_result(filename, diff_dict),
+                    check_result(basename(filepath), diff_dict),
                     max_result_diff(diff_dict),
                     time.time() - start_time)
     print("{:30} {:27}({:8.2f}) {:^7} MRD={:8.2f}  {:9.5f}(s)".format(result.target_fn,
@@ -132,10 +134,10 @@ def calculate_result(filename, filepath, threshold=None, scan_step=1, multiproc=
 
 def check_result(filename, diff_dict):
     """ Return the result is correct, failed or typical televoice. """
-    if max_result_diff(diff_dict) < 2000 and min(diff_dict.values()) > 2000: # XXX: the typical detect conditions
+    if max_result_diff(diff_dict) < 2000 and min(diff_dict.values()) > 2000:
+        # XXX: the typical detect conditions
         return 'Typical'
-    else:
-        return str(filename[:2] == min(diff_dict, key=diff_dict.get)[:2])
+    return str(filename[:2] == min(diff_dict, key=diff_dict.get)[:2])
 
 def max_result_diff(diff_dict):
     """ Return the maximum difference index of result dictionary. """
