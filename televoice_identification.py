@@ -134,7 +134,7 @@ def read_golden_ptns(folderpath):
     """
     while True: # keep trying to open the pickle file if an error occurs
         try:
-            with open(join("temp", "golden_ptns.pickle"), 'rb') as pfile:
+            with open(join("temp", "golden_ptns.pkl"), 'rb') as pfile:
                 return pickle.load(pfile)
         except FileNotFoundError: # the pickle file does not exist
             # get every paths of file in folderpath
@@ -145,13 +145,13 @@ def read_golden_ptns(folderpath):
             for path in paths:
                 (rate, sig) = wav.read(path)
                 golden_ptns[basename(path)] = mfcc(sig, rate, appendEnergy=False)
-            with open(join("temp", "golden_ptns.pickle"), 'wb') as pfile: # save the pickle binary
+            with open(join("temp", "golden_ptns.pkl"), 'wb') as pfile: # save the pickle binary
                 pickle.dump(golden_ptns, pfile, protocol=pickle.HIGHEST_PROTOCOL)
             return golden_ptns
         except EOFError: # the pickle file created but binary content haven't been written in
-            print("[Warning] Try to load golden_ptns.pickle but is empty, automatically retrying..")
+            print("[Warning] Try to load golden_ptns.pkl but is empty, automatically retrying..")
             continue # retry opening pickle file
         except pickle.UnpicklingError as err:
-            print("[Warning] Try to load golden_ptns.pickle but {}"
+            print("[Warning] Try to load golden_ptns.pkl but {}"
                   "Automatically retrying..".format(err))
             continue

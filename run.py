@@ -33,9 +33,9 @@ def run(folderpath=os.path.join("test_audio"), threshold=None, scan_step=1,
     if not os.path.exists(os.path.join("test_audio")):
         os.makedirs(os.path.join("test_audio"))
     try:
-        os.remove(os.path.join("temp", "golden_ptns.pickle")) # remove the old pickle file
+        os.remove(os.path.join("temp", "golden_ptns.pkl")) # remove the old pickle file
     except OSError:
-        print("golden_ptns.pickle not exists, and it's ok.")
+        print("golden_ptns.pkl not exists, and it's ok.")
     paths = (os.path.join(folderpath, f) for f
              in os.listdir(folderpath)
              if (os.path.isfile(os.path.join(folderpath, f)) and
