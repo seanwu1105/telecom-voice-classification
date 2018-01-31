@@ -105,8 +105,8 @@ venv.bak/
 
 # project-special
 *.tmp
-*.pickle
 *.csv
 test_audio/*
 t/*
 temp/*
+dataset.pkl
