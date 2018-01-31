@@ -33,3 +33,7 @@ example structure.
          'voice_mail_D_2.wav': 1705.1556381267567},
      'voicemail')]
 ```
+
+## Trained Module Input Requirements
+
+The input of the trained module must be a ```dict()``` and then return the classified result.
