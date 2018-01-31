@@ -8,6 +8,7 @@ import math
 from multiprocessing import Process, Queue, Value
 import numpy as np
 
+
 def ptns_cmp(golden_ptns, target_ptn, threshold=None, scan_step=1, multiproc=False):
     """ Compare the MFCC patterns difference. Return the smallest difference number for each id
         patterns.
@@ -39,14 +40,16 @@ def ptns_cmp(golden_ptns, target_ptn, threshold=None, scan_step=1, multiproc=Fal
             #     index will be infinite.
             if len(target_ptn) >= window:
                 for idx in range(0, len(target_ptn) - window + 1, scan_step):
-                    diff = min(sum(np.power(target_ptn[idx:idx + window] - ptn, 2).flat), diff)
+                    diff = min(
+                        sum(np.power(target_ptn[idx:idx + window] - ptn, 2).flat), diff)
                     if threshold and diff / window < threshold:
                         diff_indice[name] = diff / window
                         return diff_indice
-            diff_indice[name] = diff / window # save the difference index
+            diff_indice[name] = diff / window  # save the difference index
     else:    # multicore parallel comparison
         queue = Queue()    # the queue for outputs of multiprocessing
-        stop_flag = Value('H', 0)    # the flag to stop the process from running if set 1
+        # the flag to stop the process from running if set 1
+        stop_flag = Value('H', 0)
         procs = [Process(target=cmp_proc, args=(i, target_ptn, queue, stop_flag, threshold,
                                                 scan_step)) for i in golden_ptns.items()]
         for proc in procs:
@@ -54,6 +57,7 @@ def ptns_cmp(golden_ptns, target_ptn, threshold=None, scan_step=1, multiproc=Fal
         for _ in procs:
             diff_indice.update(queue.get())
     return diff_indice
+
 
 def cmp_proc(golden_item, target_ptn, queue, stop_flag, threshold, scan_step):
     """ The comparing procedure for multiprocessing.
@@ -74,7 +78,8 @@ def cmp_proc(golden_item, target_ptn, queue, stop_flag, threshold, scan_step):
             The step of scanning on frame of target MFCC pattern.
     """
 
-    window = len(golden_item[1])    # the pattern of the golden element in dictionary
+    # the pattern of the golden element in dictionary
+    window = len(golden_item[1])
     diff = math.inf
     # if the length of target pattern is smaller than the golden pattern, the difference index will
     #     be infinite.
@@ -82,7 +87,8 @@ def cmp_proc(golden_item, target_ptn, queue, stop_flag, threshold, scan_step):
         for idx in range(0, len(target_ptn) - window + 1, scan_step):
             if stop_flag.value == 1:
                 break
-            diff = min(sum(np.power(target_ptn[idx:idx + window] - golden_item[1], 2).flat), diff)
+            diff = min(
+                sum(np.power(target_ptn[idx:idx + window] - golden_item[1], 2).flat), diff)
             if threshold and diff / window < threshold:
                 stop_flag.value = 1
     queue.put({golden_item[0]: diff / window})
