@@ -14,6 +14,7 @@ from televoice_identification import televoice_identify
 
 logging.basicConfig(level=logging.INFO)
 
+
 def run(folderpath=os.path.join("test_audio"), threshold=None, scan_step=1,
         multiproc_cmp=False, nmultiproc_run=8):
     """ Get the comparison result for each testing audio files. Result will be saved in
@@ -45,8 +46,7 @@ def run(folderpath=os.path.join("test_audio"), threshold=None, scan_step=1,
         logger.info("golden_ptns.pkl not exists, and it's ok.")
     paths = (os.path.join(folderpath, f) for f
              in os.listdir(folderpath)
-             if (os.path.isfile(os.path.join(folderpath, f)) and
-                 f.lower().endswith(('.mp3', '.wav'))))
+             if f.lower().endswith(('.mp3', '.wav')))
     results = set()
 
     total_start_time = time.time()
@@ -85,8 +85,7 @@ def run(folderpath=os.path.join("test_audio"), threshold=None, scan_step=1,
                                                   scan_step, multiproc_cmp, nmultiproc_run)
     save_results_csv(results, total_time, parameters_msg)
 
-    # generate the mfc dataset
-    generate_mfcc_dataset(results)
+    return results
 
 
 def calculate_result(filepath, threshold=None, scan_step=1, multiproc=False, queue=None):
@@ -121,6 +120,7 @@ def calculate_result(filepath, threshold=None, scan_step=1, multiproc=False, que
         queue.put(result)
     return result
 
+
 def save_results_csv(results, total_time, filename='result.csv'):
     """ Save the results as csv readable file. """
     with open("{}.csv".format(filename), 'w', newline='') as csvfile:
@@ -130,15 +130,17 @@ def save_results_csv(results, total_time, filename='result.csv'):
         w.writerows((r.filename, r.matched_golden_ptn[0], r.matched_golden_ptn[1], r.mrd,
                      r.result_type, r.is_correct, r.exe_time) for r in results)
 
+
 def generate_mfcc_dataset(results):
     """ Generate the dataset of MFCC feature comparison results from test_audio. The dataset can be
     use to train the machine learning network of classifier in different televoice types. The
     generated file is saved as `dataset.pkl`, the pickle binary.
     """
-    with open(os.path.join("dataset.pkl"), 'wb') as pfile: # save the dataset as pickle
+    with open(os.path.join("dataset.pkl"), 'wb') as pfile:  # save the dataset as pickle
         pickle.dump([(r.diff_indice, r.result_type) for r in results], pfile,
                     protocol=pickle.HIGHEST_PROTOCOL)
     logging.getLogger(__name__).info("dataset.pkl has generated.")
 
+
 if __name__ == '__main__':
-    run(multiproc_cmp=True)
+    run(threshold=1500, scan_step=3, multiproc_cmp=True)

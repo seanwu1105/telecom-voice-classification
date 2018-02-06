@@ -170,6 +170,6 @@ def read_golden_ptns(folderpath):
                                                 "automatically retrying..")
             continue  # retry opening pickle file
         except pickle.UnpicklingError as err:
-            logging.getLogger(__name__).warning("Try to load golden_ptns.pkl but {}".format(err) +
+            logging.getLogger(__name__).warning("Try to load golden_ptns.pkl but {}. ".format(err) +
                                                 "Automatically retrying..")
             continue
