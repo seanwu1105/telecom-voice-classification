@@ -73,8 +73,7 @@ def run(folderpath=os.path.join("test_audio"), threshold=None, scan_step=1,
     else:
         # run sequentially
         for path in paths:
-            results.add(calculate_result(
-                path, threshold, scan_step, multiproc_cmp))
+            results.add(calculate_result(path, threshold, scan_step, multiproc_cmp))
 
     total_time = time.time() - total_start_time
     logger.info("Total Time Elapse: %f", total_time)
