@@ -276,6 +276,3 @@ class Televid(object):
                 logging.getLogger(__name__).warning("Load golden_ptns.pkl"
                                                     "but %s, retrying..", err)
                 continue
-
-
-Televid.load_golden_patterns()
