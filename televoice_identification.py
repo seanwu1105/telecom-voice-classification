@@ -159,8 +159,7 @@ def read_golden_ptns(folderpath):
             golden_ptns = dict()
             for path in paths:
                 (rate, sig) = wav.read(path)
-                golden_ptns[os.path.basename(path)] = mfcc(
-                    sig, rate, appendEnergy=False)
+                golden_ptns[os.path.basename(path)] = mfcc(sig, rate, appendEnergy=False)
             with open(os.path.join("temp", "golden_ptns.pkl"), 'wb') as pfile:  # save the pickle
                 pickle.dump(golden_ptns, pfile,
                             protocol=pickle.HIGHEST_PROTOCOL)

@@ -1,2 +1,3 @@
 [MASTER]
-extension-pkg-whitelist=numpy
+extension-pkg-whitelist = numpy
+ignored-modules = scipy

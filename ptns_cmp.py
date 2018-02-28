@@ -65,7 +65,7 @@ def cmp_proc(golden_item, target_ptn, queue, stop_flag, threshold, scan_step):
     Parameters
         ----------
         golden_item : dict
-            The golden patterns dictionary. Each data is 1-dimension array.
+            XXX: The golden patterns dictionary. Each data is 1-dimension array.
         target_ptn : 1d-array
             The target pattern to be compared.
         queue : multiprocessing.Queue()
