@@ -17,6 +17,7 @@ import televid
 
 logging.basicConfig(level=logging.INFO)
 
+
 class TestTelevid(object):
     """ Hold the state of multiple results of `Televid` instance. """
 
@@ -31,7 +32,8 @@ class TestTelevid(object):
         """
 
         self.total_running_time = None
-        self.paths = itertools.chain.from_iterable(folderpath.glob(e) for e in ext)
+        self.paths = itertools.chain.from_iterable(
+            folderpath.glob(e) for e in ext)
         self.res = set()
         self.threshold = None
         self.scan_step = None
@@ -57,7 +59,6 @@ class TestTelevid(object):
         Returns:
             set: A set containing all results in testing folder.
         """
-
 
         def identify_proc(filepath, mp_queue=None):
             """ Calculate the result by calling the `identify()` of each Televid
@@ -191,12 +192,14 @@ class TestTelevid(object):
         print(msg_1, msg_2, sep='\t')
         return result
 
+
 def main():
     """ The main function. """
 
     ttvid = TestTelevid()
     ttvid.run(threshold=1500, scan_step=3, multiproc_identify=True)
     ttvid.save_results()
+
 
 if __name__ == '__main__':
     main()
