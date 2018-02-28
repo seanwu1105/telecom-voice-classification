@@ -279,7 +279,3 @@ class Televid(object):
 
 
 Televid.load_golden_patterns()
-
-#AAA = Televid(pathlib.Path('test_audio', 'no_response_B (1).mp3'))
-#AAA.identify(multiproc=True, threshold=1500)
-#print(AAA.identify_time)
