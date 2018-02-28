@@ -1,145 +1,202 @@
 """ Author: Sean Wu
     NCU CSIE 3B, Taiwan
-Run the televoice_indentify() through all of testing data in `/test_audio`. """
+
+Run through all of the testing data by calling televid.
+"""
 
 import csv
-from multiprocessing import Process, Queue
-import os
-import time
+import itertools
 import logging
+import multiprocessing as mp
+import pathlib
 import pickle
 import platform
-from televoice_identification import televoice_identify
+import time
 
+import televid
 
 logging.basicConfig(level=logging.INFO)
 
+class TestTelevid(object):
+    """ Hold the state of multiple results of `Televid` instance. """
 
-def run(folderpath=os.path.join("test_audio"), threshold=None, scan_step=1,
-        multiproc_cmp=False, nmultiproc_run=8):
-    """ Get the comparison result for each testing audio files. Result will be saved in
-        `results.csv`.
+    def __init__(self, folderpath=pathlib.Path('test_audio'), ext=('*.wav', '*.mp3')):
+        """ Initialize the folder path and extensions for files to test in
+            `TestTelvid().run()`.
 
-    Parameters
-    ----------
-    folderpath : string
-        The folderpath of testing audio files. The default is `./test_audio`.
-    threshold : float
-        The threshold for the least difference to break the comparison.
-    scan_step : integer
-        The step of scanning on frame of target MFCC pattern.
-    multiproc_cmp : boolean
-        If `True`, the comparing process will run in multicore of CPU, and vice versa.
-    nmultiproc_run : integer
-        The # of process in running test. If set `None` or non-positive integer, `run()` will excute
-        sequentially. The default is `8`.
-    """
-    logger = logging.getLogger(__name__)
-    if not os.path.exists(os.path.join("temp")):
-        os.makedirs(os.path.join("temp"))
-    if not os.path.exists(os.path.join("test_audio")):
-        os.makedirs(os.path.join("test_audio"))
-    try:
-        # remove the old pickle file
-        os.remove(os.path.join("temp", "golden_ptns.pkl"))
-    except OSError:
-        logger.info("golden_ptns.pkl not exists, and it's ok.")
-    paths = (os.path.join(folderpath, f) for f
-             in os.listdir(folderpath)
-             if f.lower().endswith(('.mp3', '.wav')))
-    results = set()
+        folderpath (str, optional): Defaults to test_audio. The folder path of
+            testing audio files.
+        ext (tuple, optional): Defaults to ('*.wav', '*.mp3'). The extensions
+            (file types) which need to be tested.
+        """
 
-    total_start_time = time.time()
-    if nmultiproc_run is not None and nmultiproc_run > 1:
-        # run parallelly
-        # the variable "nmultiproc_run" is the number of multiprocessing running parallelly one time
-        procs = []
-        queue = Queue()
-        for idx, path in enumerate(paths):
-            if idx != 0 and idx % nmultiproc_run == 0:
+        self.total_running_time = None
+        self.paths = itertools.chain.from_iterable(folderpath.glob(e) for e in ext)
+        self.res = set()
+        self.threshold = None
+        self.scan_step = None
+        self.multiproc_identify = None
+        self.nmultiproc_run = None
+
+    def run(self, threshold=None, scan_step=1, multiproc_identify=False,
+            nmultiproc_run=8, display_results=True):
+        """ Get the comparison result for each testing audio files.
+
+        threshold (float, optional): Defaults to None. The threshold for the
+            least difference to stop the comparison procedure.
+        scan_step (int, optional): Defaults to 1. The step of scanning on frame
+            of target MFCC pattern.
+        multiproc_identify (bool, optional): Defaults to False. If set True, the
+            comparing process will run in multicore of CPU, and vice versa.
+        nmultiproc_run (int, optional): Defaults to 8. The number of process in
+            running test. If set None or non-positive integer, `run()` will
+            excute sequentially.
+        display_results (bool, optional): Defaults to True. If set True, show
+            the result in run time.
+
+        Returns:
+            set: A set containing all results in testing folder.
+        """
+
+
+        def identify_proc(filepath, mp_queue=None):
+            """ Calculate the result by calling the `identify()` of each Televid
+                object.
+
+            Args:
+                filepath (str): The file path to the target audio file.
+                mp_queue (multiprocessing.Queue, optional): Defaults to None.
+                    The `Queue` instance for getting the result by multiprocess
+                    `Process()`.
+
+            Returns:
+                Televid: A Televid instance containing the result after
+                    indentified.
+            """
+
+            televoice = televid.Televid(filepath)
+            televoice.identify(threshold=threshold, scan_step=scan_step,
+                               multiproc=multiproc_identify)
+            if mp_queue is not None:
+                mp_queue.put(televoice)
+            return televoice
+
+        start_time = time.time()
+        self.threshold = threshold
+        self.scan_step = scan_step
+        self.multiproc_identify = multiproc_identify
+        self.nmultiproc_run = nmultiproc_run
+
+        if nmultiproc_run is None or nmultiproc_run <= 1:
+            # Run sequentially
+            for path in self.paths:
+                output = identify_proc(path)
+                self.res.add(output)
+                if display_results:
+                    self.display(output)
+        else:
+            # Run parallelly
+            mp_queue = mp.Queue()
+            procs = []
+            for idx, path in enumerate(self.paths):
+                if idx != 0 and idx % nmultiproc_run == 0:
+                    for proc in procs:
+                        proc.start()
+                    for _ in procs:
+                        output = mp_queue.get()
+                        self.res.add(output)
+                        if display_results:
+                            self.display(output)
+                    procs = []
+                procs.append(mp.Process(target=identify_proc,
+                                        args=(path, mp_queue)))
+
+            # If the number of processes is not divisible by nmultproc_run, get
+            # the result of the remaining processes.
+            if procs:
                 for proc in procs:
                     proc.start()
                 for _ in procs:
-                    results.add(queue.get())
-                procs = []
-            procs.append(Process(target=calculate_result, args=(path,),
-                                 kwargs={'threshold': threshold, 'scan_step': scan_step,
-                                         'multiproc': multiproc_cmp, 'queue': queue}))
-        if procs:
-            for proc in procs:
-                proc.start()
-            for _ in procs:
-                results.add(queue.get())
-    else:
-        # run sequentially
-        for path in paths:
-            results.add(calculate_result(path, threshold, scan_step, multiproc_cmp))
+                    output = mp_queue.get()
+                    self.res.add(output)
+                    if display_results:
+                        self.display(output)
 
-    total_time = time.time() - total_start_time
-    logger.info("Total Time Elapse: %f", total_time)
+        self.total_running_time = time.time() - start_time
+        logging.getLogger(__name__).info("Total time elapse: %f",
+                                         self.total_running_time)
+        return self.res
 
-    # output the result in csv file
-    parameters_msg = ("platform={} {} threshold={} scan_step={} multiproc_cmp={} "
-                      "nmultiproc_run={}").format(platform.system(), platform.release(), threshold,
-                                                  scan_step, multiproc_cmp, nmultiproc_run)
-    save_results_csv(results, total_time, parameters_msg)
+    def save_results(self, detailed=True):
+        """ Save the results as a readable csv file.
 
-    return results
+        detailed (bool, optional): Defaults to True. If set True, show all of
+            the testing parameters and OS environment in content and name of
+            csv file.
+        """
 
+        if detailed:
+            details = {'total_running_time': self.total_running_time,
+                       'platform': platform.system() + ' ' + platform.release(),
+                       'threshold': self.threshold, 'scan_step': self.scan_step,
+                       'multiproc_identify': self.multiproc_identify,
+                       'nmultiproc_run': self.nmultiproc_run}
+        else:
+            details = dict()
+        msg = ['{}={}'.format(key, val) for key, val in details.items()]
+        filename = ' '.join(msg)
 
-def calculate_result(filepath, threshold=None, scan_step=1, multiproc=False, queue=None):
-    """ Calculate the result and print on the screen.
+        with open('{}.csv'.format(filename), 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            # Field header
+            writer.writerow(('Name', 'Matched', 'Difference',
+                             'Max Result Difference', 'Result Type',
+                             'Is Correct', 'Identify Time', ''.join(msg)))
+            writer.writerows((r.filepath.name, *r.matched_pattern(True), r.mrd,
+                              r.result_type, r.is_correct, r.identify_time)
+                             for r in self.res)
+        logging.getLogger(__name__).info("Results csv file has generated.")
 
-    Parameters
-    ----------
-    filepath : string
-        The filepath to the target audio file.
-    threshold : float
-        The threshold for the least difference to break the comparison.
-    scan_step : integer
-        The step of scanning on frame of target MFCC pattern.
-    multiproc : boolean
-        If `True`, the comparing process will run in multicore of CPU, and vice versa.
-    queue : multiprocessing.Queue()
-        The `Queue` instance for getting the result by multiprocess `Process()`.
+    def save_mfcc_training_dataset(self):
+        """ Generate the dataset of MFCC feature comparison results.
 
-    Return
-    ------
-    result : A special object contaning both raw and analyzed results.
-    """
+        The dataset can be use to train the machine learning network of
+        classifier in different televoice types. The generated file is saved as
+        `dataset.pkl`, the pickle binary.
+        """
 
-    result = televoice_identify(filepath, threshold, scan_step, multiproc)
-    print("{:30}{:27}({:8.2f})\tMRD={:8.2f}{:^17}{:^7}{:9.5f}(s)".format(result.filename,
-                                                                         *result.matched_golden_ptn,
-                                                                         result.mrd,
-                                                                         result.result_type,
-                                                                         result.is_correct,
-                                                                         result.exe_time))
-    if queue is not None:
-        queue.put(result)
-    return result
+        # Save the dataset as pickle
+        with open(pathlib.Path('dataset.pkl'), 'wb') as pfile:
+            pickle.dump([(r.diffs, r.result_type) for r in self.res], pfile,
+                        protocol=pickle.HIGHEST_PROTOCOL)
+        logging.getLogger(__name__).info("dataset.pkl has generated.")
 
+    @staticmethod
+    def display(result):
+        """ Display the running-time result.
 
-def save_results_csv(results, total_time, filename='result.csv'):
-    """ Save the results as csv readable file. """
-    with open("{}.csv".format(filename), 'w', newline='') as csvfile:
-        w = csv.writer(csvfile)
-        w.writerow(('Target', 'Matched', 'Difference', 'Max Result Difference', 'Result Type',
-                    'Is Correct', 'Exe Time', total_time, filename))  # field header
-        w.writerows((r.filename, r.matched_golden_ptn[0], r.matched_golden_ptn[1], r.mrd,
-                     r.result_type, r.is_correct, r.exe_time) for r in results)
+        Args:
+            result (Televid): A Televid instance which has already identified.
 
+        Returns:
+            Televid: The same object as argument `result`.
+        """
 
-def generate_mfcc_dataset(results):
-    """ Generate the dataset of MFCC feature comparison results from test_audio. The dataset can be
-    use to train the machine learning network of classifier in different televoice types. The
-    generated file is saved as `dataset.pkl`, the pickle binary.
-    """
-    with open(os.path.join("dataset.pkl"), 'wb') as pfile:  # save the dataset as pickle
-        pickle.dump([(r.diff_indice, r.result_type) for r in results], pfile,
-                    protocol=pickle.HIGHEST_PROTOCOL)
-    logging.getLogger(__name__).info("dataset.pkl has generated.")
+        msg_1 = "{:30}{:27}({:8.2f})".format(result.filepath.name,
+                                             *result.matched_pattern(True))
+        msg_2 = "MRD={:8.2f}{:^17}{:^7}{:9.5f}(s)".format(result.mrd,
+                                                          result.result_type,
+                                                          result.is_correct,
+                                                          result.identify_time)
+        print(msg_1, msg_2, sep='\t')
+        return result
 
+def main():
+    """ The main function. """
+
+    ttvid = TestTelevid()
+    ttvid.run(threshold=1500, scan_step=3, multiproc_identify=True)
+    ttvid.save_results()
 
 if __name__ == '__main__':
-    run(threshold=1500, scan_step=3, multiproc_cmp=True)
+    main()
