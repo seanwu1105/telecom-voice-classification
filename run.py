@@ -32,13 +32,14 @@ class TestTelevid(object):
         """
 
         self.total_running_time = None
-        self.paths = itertools.chain.from_iterable(
-            folderpath.glob(e) for e in ext)
         self.res = set()
         self.threshold = None
         self.scan_step = None
         self.multiproc_identify = None
         self.nmultiproc_run = None
+        self.golden_patterns_path = pathlib.Path('golden_wav')
+        self.__golden_pattern = None
+        self.__paths = list(itertools.chain.from_iterable(folderpath.glob(e) for e in ext))
 
     def run(self, threshold=None, scan_step=1, multiproc_identify=False,
             nmultiproc_run=8, display_results=True):
@@ -60,38 +61,17 @@ class TestTelevid(object):
             set: A set containing all results in testing folder.
         """
 
-        def identify_proc(filepath, mp_queue=None):
-            """ Calculate the result by calling the `identify()` of each Televid
-                object.
-
-            Args:
-                filepath (str): The file path to the target audio file.
-                mp_queue (multiprocessing.Queue, optional): Defaults to None.
-                    The `Queue` instance for getting the result by multiprocess
-                    `Process()`.
-
-            Returns:
-                Televid: A Televid instance containing the result after
-                    indentified.
-            """
-
-            televoice = televid.Televid(filepath)
-            televoice.identify(threshold=threshold, scan_step=scan_step,
-                               multiproc=multiproc_identify)
-            if mp_queue is not None:
-                mp_queue.put(televoice)
-            return televoice
-
         start_time = time.time()
         self.threshold = threshold
         self.scan_step = scan_step
         self.multiproc_identify = multiproc_identify
         self.nmultiproc_run = nmultiproc_run
+        self.__golden_pattern = televid.Televid.load_golden_patterns(self.golden_patterns_path)
 
         if nmultiproc_run is None or nmultiproc_run <= 1:
             # Run sequentially
-            for path in self.paths:
-                output = identify_proc(path)
+            for path in self.__paths:
+                output = self.identify_proc(path)
                 self.res.add(output)
                 if display_results:
                     self.display(output)
@@ -99,7 +79,7 @@ class TestTelevid(object):
             # Run parallelly
             mp_queue = mp.Queue()
             procs = []
-            for idx, path in enumerate(self.paths):
+            for idx, path in enumerate(self.__paths):
                 if idx != 0 and idx % nmultiproc_run == 0:
                     for proc in procs:
                         proc.start()
@@ -109,7 +89,7 @@ class TestTelevid(object):
                         if display_results:
                             self.display(output)
                     procs = []
-                procs.append(mp.Process(target=identify_proc,
+                procs.append(mp.Process(target=self.identify_proc,
                                         args=(path, mp_queue)))
 
             # If the number of processes is not divisible by nmultproc_run, get
@@ -127,6 +107,28 @@ class TestTelevid(object):
         logging.getLogger(__name__).info("Total time elapse: %f",
                                          self.total_running_time)
         return self.res
+
+    def identify_proc(self, filepath, mp_queue=None):
+        """ Calculate the result by calling the `identify()` of each Televid
+            object.
+
+        Args:
+            filepath (str): The file path to the target audio file.
+            mp_queue (multiprocessing.Queue, optional): Defaults to None.
+                The `Queue` instance for getting the result by multiprocess
+                `Process()`.
+
+        Returns:
+            Televid: A Televid instance containing the result after
+                indentified.
+        """
+
+        televoice = televid.Televid(filepath, self.__golden_pattern)
+        televoice.identify(threshold=self.threshold, scan_step=self.scan_step,
+                           multiproc=self.multiproc_identify)
+        if mp_queue is not None:
+            mp_queue.put(televoice)
+        return televoice
 
     def save_results(self, detailed=True):
         """ Save the results as a readable csv file.
@@ -167,7 +169,7 @@ class TestTelevid(object):
         """
 
         # Save the dataset as pickle
-        with open(pathlib.Path('dataset.pkl'), 'wb') as pfile:
+        with pathlib.Path('dataset.pkl').open('wb') as pfile:
             pickle.dump([(r.diffs, r.result_type) for r in self.res], pfile,
                         protocol=pickle.HIGHEST_PROTOCOL)
         logging.getLogger(__name__).info("dataset.pkl has generated.")
@@ -197,7 +199,7 @@ def main():
     """ The main function. """
 
     ttvid = TestTelevid()
-    ttvid.run(threshold=1500, scan_step=3, multiproc_identify=True)
+    ttvid.run(threshold=1500, scan_step=3)
     ttvid.save_results()
 
 

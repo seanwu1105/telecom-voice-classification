@@ -42,10 +42,7 @@ class Televid(object):
         audio wavfiles.
     """
 
-    # Contain the golden patterns with its file name as key.
-    golden_patterns = dict()
-
-    def __init__(self, filepath):
+    def __init__(self, filepath, golden_patterns):
         """ Build the telecomvoice identification object and do the
             pre-processing.
 
@@ -59,8 +56,12 @@ class Televid(object):
         """
 
         self.filepath = pathlib.Path(filepath)
+        # Contain the golden patterns with its file name as key.
+        self.golden_patterns = golden_patterns
         self.diffs = dict()
         self.identify_time = None
+        self.threshold = None
+        self.scan_step = None
 
         # Call the ffmpeg to convert (normalize) the input audio into:
         #    sample rate    8000 Hz
@@ -70,7 +71,7 @@ class Televid(object):
         try:
             proc = subprocess.run(['ffmpeg', '-y', '-hide_banner',
                                    '-loglevel', 'panic',
-                                   '-i', self.filepath,
+                                   '-i', str(self.filepath),
                                    '-af', 'pan=mono|c0=c0',
                                    '-ar', '8000',
                                    '-sample_fmt', 's16',
@@ -125,46 +126,10 @@ class Televid(object):
             dict: A dictionary of differences between each golden pattern.
         """
 
-        def cmp_proc(name, golden_pattern, stop_flag, mp_queue=None):
-            """ The procedure for one golden pattern.
-
-            Args:
-                name (str): The name of the golden pattern.
-                golden_pattern (numpy.array): The MFCC feature of the golden
-                    pattern.
-                stop_flag (multiprocessing.Value): If set nonzero, this function
-                    will be stopped for reaching the condition of `threshold`.
-                mp_queue (multiprocessing.Queue, optional): Defaults to None.
-                    The `Queue` instance for getting the result (diff) by
-                    multiprocessing `Process()`.
-
-            Returns:
-                dict: A dictionary contains only one item which key is the name
-                    and data is the difference value.
-            """
-
-            window = len(golden_pattern)
-            diff = math.inf
-            if len(self.target_mfcc) >= window:
-                for i in range(0, len(self.target_mfcc) - window + 1, scan_step):
-                    if stop_flag.value != 0:
-                        diff = math.inf
-                        break
-                    diff_arr = self.target_mfcc[i:i + window] - golden_pattern
-                    diff = min(sum(np.power(diff_arr, 2).flat), diff)
-                    if threshold and diff / window < threshold:
-                        stop_flag.value = 1
-                        break
-            else:
-                logging.getLogger(__name__).warning("Ignore the comparison of"
-                                                    "%s since it's shorter than"
-                                                    "target MFCC.")
-            res = {name: diff / window}
-            if mp_queue is not None:
-                mp_queue.put(res)
-            return res
 
         start_time = time.time()
+        self.threshold = threshold
+        self.scan_step = scan_step
 
         # The stop flag is to signal all the cmp_proc to stop since the result
         # of one of them is smaller than the threshold. This is used in both
@@ -174,13 +139,13 @@ class Televid(object):
         if not multiproc:
             # Sequential comparison
             for name, ptn in self.golden_patterns.items():
-                self.diffs.update(cmp_proc(name, ptn, stop_flag))
+                self.diffs.update(self.cmp_proc(name, ptn, stop_flag))
         else:
             # Multiprocessing parallel comparison
             # The queue for outputs of multiprocessing
             queue = mp.Queue()
             # The flag to stop the process from running if set 1
-            procs = [mp.Process(target=cmp_proc,
+            procs = [mp.Process(target=self.cmp_proc,
                                 args=(*i,
                                       stop_flag,
                                       queue))
@@ -191,6 +156,45 @@ class Televid(object):
                 self.diffs.update(queue.get())
         self.identify_time = time.time() - start_time
         return self.diffs
+
+    def cmp_proc(self, name, golden_pattern, stop_flag, mp_queue=None):
+        """ The procedure for one golden pattern.
+
+        Args:
+            name (str): The name of the golden pattern.
+            golden_pattern (numpy.array): The MFCC feature of the golden
+                pattern.
+            stop_flag (multiprocessing.Value): If set nonzero, this function
+                will be stopped for reaching the condition of `threshold`.
+            mp_queue (multiprocessing.Queue, optional): Defaults to None.
+                The `Queue` instance for getting the result (diff) by
+                multiprocessing `Process()`.
+
+        Returns:
+            dict: A dictionary contains only one item which key is the name
+                and data is the difference value.
+        """
+
+        window = len(golden_pattern)
+        diff = math.inf
+        if len(self.target_mfcc) >= window:
+            for i in range(0, len(self.target_mfcc) - window + 1, self.scan_step):
+                if stop_flag.value != 0:
+                    diff = math.inf
+                    break
+                diff_arr = self.target_mfcc[i:i + window] - golden_pattern
+                diff = min(sum(np.power(diff_arr, 2).flat), diff)
+                if self.threshold and diff / window < self.threshold:
+                    stop_flag.value = 1
+                    break
+        else:
+            logging.getLogger(__name__).warning("Ignore the comparison of"
+                                                "%s since it's shorter than"
+                                                "target MFCC.")
+        res = {name: diff / window}
+        if mp_queue is not None:
+            mp_queue.put(res)
+        return res
 
     def matched_pattern(self, diff_value=False):
         """ Get which golden pattern is the matched one.
@@ -234,8 +238,8 @@ class Televid(object):
         """
         return str(self.filepath.name[:2] == self.result_type[:2]).lower()
 
-    @classmethod
-    def load_golden_patterns(cls, folderpath=pathlib.Path('golden_wav')):
+    @staticmethod
+    def load_golden_patterns(folderpath=pathlib.Path('golden_wav')):
         """ Load every wavfile in folderpath and generate its MFCC feature.
 
             If there exists a pickle, load it instead. Returns a dict()
@@ -252,20 +256,20 @@ class Televid(object):
         while True:
             try:
                 with folderpath.joinpath('golden_ptns.pkl').open('rb') as pfile:
-                    cls.golden_patterns = pickle.load(pfile)
-                return cls.golden_patterns
+                    golden_patterns = pickle.load(pfile)
+                return golden_patterns
             except FileNotFoundError:
                 # The pickle file does not exist.
                 # Get MFCC feature from golden wavfiles.
                 for fpath in folderpath.glob('*.wav'):
                     (rate, sig) = wavfile.read(fpath)
-                    cls.golden_patterns[fpath.stem] = mfcc(sig, rate,
-                                                           appendEnergy=False)
+                    golden_patterns[fpath.stem] = mfcc(sig, rate,
+                                                       appendEnergy=False)
                 # Save the pickle.
                 with folderpath.joinpath('golden_ptns.pkl').open('wb') as pfile:
-                    pickle.dump(cls.golden_patterns, pfile,
+                    pickle.dump(golden_patterns, pfile,
                                 protocol=pickle.HIGHEST_PROTOCOL)
-                return cls.golden_patterns
+                return golden_patterns
             except EOFError:
                 # The pickle file created but binary content haven't been
                 # written in.
