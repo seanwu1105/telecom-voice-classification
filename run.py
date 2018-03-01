@@ -39,6 +39,8 @@ class TestTelevid(object):
         self.nmultiproc_run = None
         self.golden_patterns_path = pathlib.Path('golden_wav')
         self.__golden_pattern = None
+        # Avoid generator since we need everything in TestTelevid instance to be
+        # picklable for multiprocessing.
         self.__paths = list(itertools.chain.from_iterable(folderpath.glob(e) for e in ext))
 
     def run(self, threshold=None, scan_step=1, multiproc_identify=False,
