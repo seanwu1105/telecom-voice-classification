@@ -1,7 +1,8 @@
 """ Author: Sean Wu
     NCU CSIE 3B, Taiwan
 
-Run through all of the testing data by calling televid.
+Run through all of the testing data by calling televid for best parameter
+testing.
 """
 
 import csv
@@ -21,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 class TestTelevid(object):
     """ Hold the state of multiple results of `Televid` instance. """
 
-    def __init__(self, folderpath=pathlib.Path('test_audio'), ext=('*.wav', '*.mp3')):
+    def __init__(self, folderpath='test_audio', ext=('*.wav', '*.mp3')):
         """ Initialize the folder path and extensions for files to test in
             `TestTelvid().run()`.
 
@@ -31,6 +32,7 @@ class TestTelevid(object):
             (file types) which need to be tested.
         """
 
+        folderpath = pathlib.Path(folderpath)
         self.total_running_time = None
         self.res = set()
         self.threshold = None
@@ -41,7 +43,8 @@ class TestTelevid(object):
         self.__golden_pattern = None
         # Avoid generator since we need everything in TestTelevid instance to be
         # picklable for multiprocessing.
-        self.__paths = list(itertools.chain.from_iterable(folderpath.glob(e) for e in ext))
+        self.__paths = list(itertools.chain.from_iterable(
+            folderpath.glob(e) for e in ext))
 
     def run(self, threshold=None, scan_step=1, multiproc_identify=False,
             nmultiproc_run=8, display_results=True):
@@ -68,7 +71,8 @@ class TestTelevid(object):
         self.scan_step = scan_step
         self.multiproc_identify = multiproc_identify
         self.nmultiproc_run = nmultiproc_run
-        self.__golden_pattern = televid.Televid.load_golden_patterns(self.golden_patterns_path)
+        self.__golden_pattern = televid.Televid.load_golden_patterns(
+            self.golden_patterns_path)
 
         if nmultiproc_run is None or nmultiproc_run <= 1:
             # Run sequentially

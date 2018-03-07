@@ -126,7 +126,6 @@ class Televid(object):
             dict: A dictionary of differences between each golden pattern.
         """
 
-
         start_time = time.time()
         self.threshold = threshold
         self.scan_step = scan_step
@@ -239,7 +238,7 @@ class Televid(object):
         return str(self.filepath.name[:2] == self.result_type[:2]).lower()
 
     @staticmethod
-    def load_golden_patterns(folderpath=pathlib.Path('golden_wav')):
+    def load_golden_patterns(folderpath='golden_wav'):
         """ Load every wavfile in folderpath and generate its MFCC feature.
 
             If there exists a pickle, load it instead. Returns a dict()
@@ -251,6 +250,8 @@ class Televid(object):
         Returns:
             dict: Contains MFCC features with its file name as key.
         """
+
+        folderpath = pathlib.Path(folderpath)
 
         # Keep trying to open the pickle file if an error occurs.
         while True:
