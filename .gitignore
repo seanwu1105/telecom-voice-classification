@@ -108,3 +108,10 @@ venv.bak/
 *.pkl
 test_audio/*
 t/*
+
+# vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
