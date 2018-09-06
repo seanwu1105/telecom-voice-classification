@@ -1,5 +1,7 @@
 # Telecom Voice Classification
 
+[![Requirements Status](https://requires.io/github/GLaDOS1105/telecom-voice-classification/requirements.svg?branch=master)](https://requires.io/github/GLaDOS1105/telecom-voice-classification/requirements/?branch=master)
+
 ## Contents
 
 * [`televid.py`](televid.py): Provide the basic model for identification of single wave file.

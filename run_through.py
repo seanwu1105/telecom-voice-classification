@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 class TestTelevid(object):
     """ Hold the state of multiple results of `Televid` instance. """
 
-    def __init__(self, folderpath='test_audio', ext=('*.wav', '*.mp3')):
+    def __init__(self, folderpath='test_audio', ext=('**/*.wav', '**/*.mp3')):
         """ Initialize the folder path and extensions for files to test in
             `TestTelvid().run()`.
 
