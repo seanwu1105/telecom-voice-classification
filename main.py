@@ -14,7 +14,7 @@ import pickle
 import platform
 import time
 
-from televid import televid
+import televid
 
 logging.basicConfig(level=logging.INFO)
 
@@ -97,8 +97,8 @@ class RunTelevid():
                 procs.append(mp.Process(target=self.identify_proc,
                                         args=(path, mp_queue)))
 
-            # If the number of processes is not divisible by nmultproc_run, get
-            # the result of the remaining processes.
+            # If the number of processes cannot be devided evenly by
+            # nmultproc_run, get the result of the remaining processes.
             if procs:
                 for proc in procs:
                     proc.start()
@@ -192,20 +192,23 @@ class RunTelevid():
 
         msg_1 = "{:30}{:27}({:8.2f})".format(result.filepath.name,
                                              *result.matched_pattern(True))
-        msg_2 = "MRD={:8.2f}{:^17}{:^7}{:9.5f}(s)".format(result.mrd,
-                                                          result.result_type,
-                                                          result.is_correct,
-                                                          result.identify_time)
-        print(msg_1, msg_2, sep='\t')
+        msg_2 = "MRD={:8.2f}{:^17}{:^7}{:9.5f}(s)".format(
+            result.mrd,
+            result.result_type,
+            str(result.is_correct),
+            result.identify_time
+        )
+        # TODO: use logger formatter instead
+        logging.getLogger(__name__).info(msg_1 + '\t' + msg_2)
         return result
 
 
 def main():
     """ The main function. """
 
-    ttvid = RunTelevid('tests/data')
-    ttvid.run(threshold=1500, scan_step=3)
-    # ttvid.save_results()
+    batch = RunTelevid('tests/data')
+    batch.run(threshold=1500, scan_step=3)
+    # batch.save_results()
 
 
 if __name__ == '__main__':

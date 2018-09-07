@@ -6,7 +6,7 @@ Example for identification of single televid.
 
 import logging
 
-from televid import televid
+import televid
 
 logging.basicConfig(level=logging.INFO)
 
@@ -21,7 +21,7 @@ def main():
     golden_patterns = televid.Televid.load_golden_patterns()
 
     # Set the target file path.
-    filepath = 'tests/data/no_response_B (1).mp3'
+    filepath = 'tests/data/noresponse_b.mp3'
 
     televoice = televid.Televid(filepath, golden_patterns)
 

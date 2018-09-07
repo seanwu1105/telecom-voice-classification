@@ -36,7 +36,7 @@ from televid.python_speech_features import mfcc
 logging.basicConfig(level=logging.INFO)
 
 
-class Televid(object):
+class Televid():
     """ Calculate the difference indices between target audio and each golden
         audio wavfiles.
     """
@@ -253,7 +253,7 @@ class Televid(object):
         """ Check the result is correct or not. This is only the comparison
             between target filename and the `.result_type`.
         """
-        return str(self.filepath.name[:2] == self.result_type[:2]).lower()
+        return self.filepath.name[:2] == self.result_type[:2]
 
     @staticmethod
     def load_golden_patterns(folderpath='wav'):
