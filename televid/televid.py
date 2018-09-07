@@ -24,12 +24,11 @@ import multiprocessing as mp
 import logging
 import pathlib
 import pickle
-import subprocess
-import sys
 import time
 
 import numpy as np
 from scipy.io import wavfile
+import ffmpeg
 
 from televid.python_speech_features import mfcc
 
@@ -53,9 +52,14 @@ class Televid(object):
             3. Get the MFCC pattern of target file
 
         filepath (str): The path of target file (to be compared).
+
+        Raise:
+            FileNotFoundError: Cannot find the target file located in filepath.
         """
 
         self.filepath = pathlib.Path(filepath)
+        if not self.filepath.exists():
+            raise FileNotFoundError('not such file: %s' % str(self.filepath))
         # Contain the golden patterns with its file name as key.
         self.golden_patterns = golden_patterns
         self.diffs = dict()
@@ -68,19 +72,33 @@ class Televid(object):
         #    bit depth      16
         #    channels       mono (left channel only, since the target channel is
         #                         the left one)
-        try:
-            proc = subprocess.run(['ffmpeg', '-y', '-hide_banner',
-                                   '-loglevel', 'panic',
-                                   '-i', str(self.filepath),
-                                   '-af', 'pan=mono|c0=c0',
-                                   '-ar', '8000',
-                                   '-sample_fmt', 's16',
-                                   '-f', 'wav',
-                                   '-'], stdout=subprocess.PIPE)
-        except FileNotFoundError:
-            logging.getLogger(__name__).error("Require ffmpeg to convert the"
-                                              "audio in sepcific format.")
-            sys.exit(2)  # FFmpeg require
+
+        # Following is the method to call ffmpeg as subprocess.
+        # try:
+        #     proc = subprocess.run(['ffmpeg', '-y', '-hide_banner',
+        #                            '-loglevel', 'panic',
+        #                            '-i', str(self.filepath),
+        #                            '-af', 'pan=mono|c0=c0',
+        #                            '-ar', '8000',
+        #                            '-sample_fmt', 's16',
+        #                            '-f', 'wav',
+        #                            '-'], stdout=subprocess.PIPE)
+        # except FileNotFoundError:
+        #     logging.getLogger(__name__).error("Require ffmpeg to convert the"
+        #                                       "audio in sepcific format.")
+        #     sys.exit(2)  # FFmpeg require
+
+        # The following method is to call ffmpeg as pip3 installed python-ffmpeg
+        # module.
+        stdout, err = (
+            ffmpeg
+            .input(str(self.filepath))
+            .output('-', format='wav', af='pan=mono|c0=c0', ar=8000, sample_fmt='s16')
+            .overwrite_output()
+            .run(capture_stdout=True, capture_stderr=True)
+        )
+
+        logging.getLogger(__name__).debug(err)
 
         # When the output of FFmpeg is sent to stdout, the program does not fill
         # in the RIFF chunk size of the file header. Instead, the four bytes
@@ -92,7 +110,7 @@ class Televid(object):
 
         # This is the size of the entire file in bytes minus 8 bytes for the two
         # fields not included in this count: ChunkID and ChunkSize.
-        riff_chunk_size = len(proc.stdout) - 8
+        riff_chunk_size = len(stdout) - 8
         quotient = riff_chunk_size
 
         # Break up the chunk size into four bytes, held in b.
@@ -101,9 +119,9 @@ class Televid(object):
             quotient, remainder = divmod(quotient, 256)  # every 8 bits
             binarray.append(remainder)
 
-        # Replace bytes 4:8 in proc.stdout with the actual size of the RIFF
+        # Replace bytes 4:8 in stdout with the actual size of the RIFF
         # chunk.
-        riff = proc.stdout[:4] + bytes(binarray) + proc.stdout[8:]
+        riff = stdout[:4] + bytes(binarray) + stdout[8:]
 
         # Read the target wave file.
         rate, signal = wavfile.read(io.BytesIO(riff))

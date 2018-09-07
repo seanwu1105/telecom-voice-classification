@@ -21,7 +21,7 @@ def main():
     golden_patterns = televid.Televid.load_golden_patterns()
 
     # Set the target file path.
-    filepath = 'tests/data/in_busy (1).mp3'
+    filepath = 'tests/data/no_response_B (1).mp3'
 
     televoice = televid.Televid(filepath, golden_patterns)
 

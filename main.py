@@ -205,7 +205,7 @@ def main():
 
     ttvid = RunTelevid('tests/data')
     ttvid.run(threshold=1500, scan_step=3)
-    ttvid.save_results()
+    # ttvid.save_results()
 
 
 if __name__ == '__main__':
