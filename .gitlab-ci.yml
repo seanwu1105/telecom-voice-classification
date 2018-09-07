@@ -5,6 +5,7 @@ before_script:
 
 spec:
   script:
+    - apt-get install ffmpeg
     - python3 -m pip install nose2
     - nose2 -v --with-coverage
   
