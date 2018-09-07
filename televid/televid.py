@@ -280,6 +280,7 @@ class Televid():
             except FileNotFoundError:
                 # The pickle file does not exist.
                 # Get MFCC feature from golden wavfiles.
+                golden_patterns = dict()
                 for fpath in folderpath.glob('*.wav'):
                     (rate, sig) = wavfile.read(fpath)
                     golden_patterns[fpath.stem] = mfcc(sig, rate,
