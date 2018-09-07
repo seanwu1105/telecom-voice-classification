@@ -14,17 +14,17 @@ import pickle
 import platform
 import time
 
-import televid
+from televid import televid
 
 logging.basicConfig(level=logging.INFO)
 
 
-class TestTelevid(object):
+class RunTelevid():
     """ Hold the state of multiple results of `Televid` instance. """
 
-    def __init__(self, folderpath='test_audio', ext=('**/*.wav', '**/*.mp3')):
+    def __init__(self, folderpath, ext=('**/*.wav', '**/*.mp3')):
         """ Initialize the folder path and extensions for files to test in
-            `TestTelvid().run()`.
+            `RunTelevid().run()`.
 
         folderpath (str, optional): Defaults to test_audio. The folder path of
             testing audio files.
@@ -71,8 +71,7 @@ class TestTelevid(object):
         self.scan_step = scan_step
         self.multiproc_identify = multiproc_identify
         self.nmultiproc_run = nmultiproc_run
-        self.__golden_pattern = televid.Televid.load_golden_patterns(
-            self.golden_patterns_path)
+        self.__golden_pattern = televid.Televid.load_golden_patterns()
 
         if nmultiproc_run is None or nmultiproc_run <= 1:
             # Run sequentially
@@ -204,7 +203,7 @@ class TestTelevid(object):
 def main():
     """ The main function. """
 
-    ttvid = TestTelevid()
+    ttvid = RunTelevid('tests/data')
     ttvid.run(threshold=1500, scan_step=3)
     ttvid.save_results()
 

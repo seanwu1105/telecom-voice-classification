@@ -31,7 +31,7 @@ import time
 import numpy as np
 from scipy.io import wavfile
 
-from python_speech_features import mfcc
+from televid.python_speech_features import mfcc
 
 
 logging.basicConfig(level=logging.INFO)
@@ -238,20 +238,20 @@ class Televid(object):
         return str(self.filepath.name[:2] == self.result_type[:2]).lower()
 
     @staticmethod
-    def load_golden_patterns(folderpath='golden_wav'):
+    def load_golden_patterns(folderpath='wav'):
         """ Load every wavfile in folderpath and generate its MFCC feature.
 
             If there exists a pickle, load it instead. Returns a dict()
             containing MFCC features with its file name as key.
 
-        folderpath (str, optional): Defaults to 'golden_wav'. The folder
-            path of the golden wavfiles.
+        folderpath (str, optional): Defaults to 'wav'. The relative folder
+            path (relative to this script) of the golden wavfiles.
 
         Returns:
             dict: Contains MFCC features with its file name as key.
         """
 
-        folderpath = pathlib.Path(folderpath)
+        folderpath = pathlib.Path(__file__).parent.joinpath(folderpath)
 
         # Keep trying to open the pickle file if an error occurs.
         while True:

@@ -4,7 +4,11 @@
 Example for identification of single televid.
 """
 
-import televid
+import logging
+
+from televid import televid
+
+logging.basicConfig(level=logging.INFO)
 
 
 def main():
@@ -17,7 +21,7 @@ def main():
     golden_patterns = televid.Televid.load_golden_patterns()
 
     # Set the target file path.
-    filepath = 'test_audio/in_busy (1).mp3'
+    filepath = 'tests/data/in_busy (1).mp3'
 
     televoice = televid.Televid(filepath, golden_patterns)
 
@@ -25,8 +29,8 @@ def main():
     # drastically.
     televoice.identify(threshold=1500, scan_step=4, multiproc=True)
 
-    print(televoice.matched_pattern(), 'in',
-          televoice.identify_time, 'seconds')
+    logging.getLogger(__name__).info('Result: %s', televoice.matched_pattern())
+    logging.getLogger(__name__).info('Total time elapse: %f', televoice.identify_time)
 
 
 if __name__ == '__main__':

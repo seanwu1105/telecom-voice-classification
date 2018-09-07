@@ -2,7 +2,7 @@
 # Author: James Lyons 2012
 from __future__ import division
 import numpy
-from python_speech_features import sigproc
+from televid.python_speech_features import sigproc
 from scipy.fftpack import dct
 
 def mfcc(signal,samplerate=16000,winlen=0.025,winstep=0.01,numcep=13,
