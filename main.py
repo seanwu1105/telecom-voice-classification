@@ -189,17 +189,15 @@ class RunTelevid():
         Returns:
             Televid: The same object as argument `result`.
         """
-
-        msg_1 = "{:30}{:27}({:8.2f})".format(result.filepath.name,
-                                             *result.matched_pattern(True))
-        msg_2 = "MRD={:8.2f}{:^17}{:^7}{:9.5f}(s)".format(
+        logging.getLogger(RunTelevid.display.__name__).info(
+            '%25s%20s\t(%8.2f)\tMRD=%8.2f%13s%5s%9.5f(s)',
+            result.filepath.name,
+            *result.matched_pattern(True),
             result.mrd,
             result.result_type,
             str(result.is_correct),
             result.identify_time
         )
-        # TODO: use logger formatter instead
-        logging.getLogger(RunTelevid.display.__name__).info(msg_1 + '\t' + msg_2)
         return result
 
 
