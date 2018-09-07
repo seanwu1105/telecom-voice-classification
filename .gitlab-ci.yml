@@ -3,15 +3,15 @@ image: ubuntu:18.04
 before_script:
   - apt-get update -y
   - apt-get install -y python3.6
-  - python -m pip install -r requirements.txt
+  - python3.6 -m pip install -r requirements.txt
 
 spec:
   script:
     - apt-get install -y ffmpeg
-    - python -m pip install nose2
+    - python3.6 -m pip install nose2
     - nose2 -v --with-coverage
   
 pylint:
   script:
-    - python -m pip install pylint
+    - python3.6 -m pip install pylint
     - pylint --errors-only *.py
