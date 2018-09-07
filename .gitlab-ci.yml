@@ -1,13 +1,13 @@
 image: ubuntu:18.04
 
 before_script:
-  - apt-get update
-  - apt-get install python3.6
+  - apt-get update -y
+  - apt-get install -y python3.6
   - python3 -m pip install -r requirements.txt
 
 spec:
   script:
-    - apt-get install ffmpeg
+    - apt-get install -y ffmpeg
     - python3 -m pip install nose2
     - nose2 -v --with-coverage
   
