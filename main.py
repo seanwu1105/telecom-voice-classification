@@ -199,7 +199,7 @@ class RunTelevid():
             result.identify_time
         )
         # TODO: use logger formatter instead
-        logging.getLogger(__name__).info(msg_1 + '\t' + msg_2)
+        logging.getLogger(RunTelevid.display.__name__).info(msg_1 + '\t' + msg_2)
         return result
 
 
