@@ -82,3 +82,29 @@ two variables: difference indices dictionary (input) and the final outcome
 
 The input of the trained module must be a ```dict()``` and then return the
 classified result.
+
+## Dependencies
+
+SciPy>=1.1.0
+
+``` bash
+pip install scipy
+```
+
+NumPy>=1.15.0
+
+``` bash
+pip install numpy
+```
+
+ffmpeg-python>=0.1.16
+
+``` bash
+pip install ffmpeg-python
+```
+
+ffmpeg
+
+``` bash
+apt-get install ffmpeg
+```
