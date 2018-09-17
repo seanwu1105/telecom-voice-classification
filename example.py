@@ -21,7 +21,7 @@ def main():
     golden_patterns = televid.Televid.load_golden_patterns()
 
     # Set the target file path.
-    filepath = 'tests/data/noresponse_b.mp3'
+    filepath = 'test_wav/T04.WAV'
 
     televoice = televid.Televid(filepath, golden_patterns)
 
@@ -29,7 +29,7 @@ def main():
     # drastically.
     televoice.identify(threshold=1500, scan_step=4, multiproc=True)
 
-    logging.getLogger(__name__).info('Result: %s', televoice.matched_pattern())
+    logging.getLogger(__name__).info('Result: %s', televoice.matched_pattern(True))
     logging.getLogger(__name__).info('Total time elapse: %f', televoice.identify_time)
 
 

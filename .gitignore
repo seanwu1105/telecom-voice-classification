@@ -106,7 +106,7 @@ venv.bak/
 # project-special
 *.csv
 *.pkl
-t/*
+test_wav/*
 
 # vscode
 .vscode/*

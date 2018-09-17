@@ -23,9 +23,9 @@
   * Original Texts
     * 您所撥的電話無人回應。
     * 您所撥的電話無法接聽，請稍後再撥。The number you has dial is not available. Please try again later.
-* Keywords
-  * 回應
-  * 接聽
+  * Keywords
+    * 回應
+    * 接聽
 * Voice Mail
   * Original Texts
     * 您的電話將轉接到語音信箱，嘟聲後開始計費，如不留言請掛斷。快速留言嘟聲後請按＃字鍵這是09XX-XXXXXX的信箱，嗶聲後請留言。
