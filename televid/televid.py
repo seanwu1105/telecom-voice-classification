@@ -30,7 +30,7 @@ import numpy as np
 from scipy.io import wavfile
 import ffmpeg
 
-from televid.python_speech_features import mfcc
+from .python_speech_features import mfcc
 
 
 logging.basicConfig(level=logging.INFO)
