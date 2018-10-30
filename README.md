@@ -103,7 +103,7 @@ ffmpeg-python>=0.1.16
 pip install ffmpeg-python
 ```
 
-ffmpeg
+ffmpeg (for the ffmpeg-python package)
 
 ``` bash
 apt-get install ffmpeg
