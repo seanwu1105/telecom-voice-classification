@@ -7,15 +7,12 @@ explanation.
 
 Pre-Processing:
     1. Read and get golden patterns
-    2. Convert the target waveform file into specific format (also create as
-       .tmp file)
-    3. Get the MFCC pattern of target file
+    2. Get the MFCC pattern of target file
 
 then feed the MFCC pattern of target file into `pattern_cmp`.
 
 Post-Processing:
-    1. Delete .tmp file created by pre-processing step 2.
-    2. Return the result of comparison
+    Return the result of comparison
 """
 
 import io
@@ -47,8 +44,7 @@ class Televid():
 
         Pre-Processing:
             1. Read and get golden patterns
-            2. Convert the target waveform file into specific format (also
-               create as .tmp file)
+            2. Convert the target waveform file into specific format
             3. Get the MFCC pattern of target file
 
         filepath (str): The path of target file (to be compared).
