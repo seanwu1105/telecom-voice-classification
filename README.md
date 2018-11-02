@@ -97,13 +97,13 @@ NumPy>=1.15.0
 pip install numpy
 ```
 
-ffmpeg-python>=0.1.16
+FFmpeg-Python>=0.1.16
 
 ``` bash
 pip install ffmpeg-python
 ```
 
-ffmpeg (for the ffmpeg-python package)
+FFmpeg (for the FFmpeg-Python package)
 
 ``` bash
 apt-get install ffmpeg
