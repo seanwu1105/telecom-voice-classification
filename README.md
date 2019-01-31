@@ -1,8 +1,8 @@
 # Telecom Voice Classification
 
-[![pipeline status](https://gitlab.com/GLaDOS1105/telecom-voice-classification/badges/master/pipeline.svg)](https://gitlab.com/GLaDOS1105/telecom-voice-classification/commits/master)
-[![coverage report](https://gitlab.com/GLaDOS1105/telecom-voice-classification/badges/master/coverage.svg)](https://gitlab.com/GLaDOS1105/telecom-voice-classification/commits/master)
-[![Requirements Status](https://requires.io/github/GLaDOS1105/telecom-voice-classification/requirements.svg?branch=master)](https://requires.io/github/GLaDOS1105/telecom-voice-classification/requirements/?branch=master)
+[![pipeline status](https://gitlab.com/seanwu1105/telecom-voice-classification/badges/master/pipeline.svg)](https://gitlab.com/seanwu1105/telecom-voice-classification/commits/master)
+[![coverage report](https://gitlab.com/seanwu1105/telecom-voice-classification/badges/master/coverage.svg)](https://gitlab.com/seanwu1105/telecom-voice-classification/commits/master)
+[![Requirements Status](https://requires.io/github/seanwu1105/telecom-voice-classification/requirements.svg?branch=master)](https://requires.io/github/seanwu1105/telecom-voice-classification/requirements/?branch=master)
 
 ## Contents
 
